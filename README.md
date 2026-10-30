@@ -14,7 +14,7 @@ Projet de SAÉ 5 du BUT Informatique (3e année), IUT de Saint-Dié-des-Vosges �
 |---|---|---|
 | 1 – Analyse comparative | [Rapport en anglais](rendus/rendu1-analyse-comparative/SAE5_Benchmark_Report_Belcour_Kaba.pdf) | Rapport rendu le 22/09/2026 ; oral le 19/10/2026 |
 | 3 – Proposition technique | [Diaporama](rendus/rendu3-proposition-technique/Belcour_Kaba_Rendu3_PropositionTechnique.pdf) | Rendu le 15/10/2026 |
-| 4 – Proposition financière | Devis (en cours de relecture) | À rendre le 30/10/2026 |
+| 4 – Proposition financière | [Devis](rendus/rendu4-proposition-financiere/Belcour_Kaba_Rendu4_PropositionFinanciere.pdf) | Rendu le 30/10/2026 |
 
 ## Organisation du dépôt
 
