@@ -1,0 +1,17 @@
+# Fins de ligne : format LF dans le dépôt et sur tous les postes (Mac et Windows).
+# Les scripts lancés dans les conteneurs Linux échouent avec des fins de ligne Windows (CRLF).
+* text=auto eol=lf
+
+# Scripts propres à Windows
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+# Fichiers binaires : jamais modifiés par Git
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.docx binary
+*.pptx binary
+*.xlsx binary
