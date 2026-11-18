@@ -15,7 +15,24 @@ Projet de SAÉ 5 du BUT Informatique (3e année), IUT de Saint-Dié-des-Vosges �
 | 1 – Analyse comparative | [Rapport en anglais](rendus/rendu1-analyse-comparative/SAE5_Benchmark_Report_Belcour_Kaba.pdf) | Rapport rendu le 22/09/2026 ; oral le 19/10/2026 |
 | 3 – Proposition technique | [Diaporama](rendus/rendu3-proposition-technique/Belcour_Kaba_Rendu3_PropositionTechnique.pdf) | Rendu le 15/10/2026 |
 | 4 – Proposition financière | [Devis](rendus/rendu4-proposition-financiere/Belcour_Kaba_Rendu4_PropositionFinanciere.pdf) | Rendu le 30/10/2026 |
+| 7 – Environnement de développement | Ce dépôt (branches, CI/CD, Docker) et un document d'explication (à venir) | En cours, à rendre vers le 25/01/2027 |
 
 ## Organisation du dépôt
 
-Seuls les documents rendus (PDF) sont publiés, dans `rendus/`, un dossier par rendu. Les fichiers de travail (Word, PowerPoint, Excel, brouillons, outils) restent en local : voir `.gitignore`.
+```text
+.
+├── app/                 application Django (en construction)
+├── docker/              configuration des services Docker (reverse proxy…)
+├── .github/             vérifications automatiques (GitHub Actions) et modèle de pull request
+├── rendus/              documents rendus (PDF), un dossier par rendu
+├── CONTRIBUTING.md      nos règles de travail : branches, commits, pull requests
+└── README.md
+```
+
+- **Code et configuration** : publiés, pour que le dépôt soit utilisable et vérifiable par tous.
+- **Documents** : seuls les PDF rendus sont publiés. Les fichiers de travail (Word, PowerPoint, Excel, brouillons) restent en local : voir `.gitignore`.
+- **Secrets** : aucun mot de passe n'est publié (`.env` est ignoré par Git).
+
+## Contribuer
+
+Toute modification passe par une branche et une pull request : voir [CONTRIBUTING.md](CONTRIBUTING.md).

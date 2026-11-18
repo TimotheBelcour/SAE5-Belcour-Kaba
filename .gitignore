@@ -26,3 +26,24 @@ desktop.ini
 # Éditeurs
 .vscode/
 .idea/
+
+# Secrets : jamais de mot de passe sur GitHub (seul .env.example est publié)
+.env
+.env.*
+!.env.example
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Django : fichiers générés
+*.sqlite3
+app/staticfiles/
+app/media/
