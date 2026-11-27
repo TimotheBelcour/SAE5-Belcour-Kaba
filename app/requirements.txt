@@ -1,0 +1,4 @@
+# Dépendances de l'application (installées dans l'image Docker de production).
+# Versions fixées pour que tout le monde (Mac, Windows, CI, Docker) ait exactement les mêmes.
+Django==5.2.19
+python-dotenv==1.2.4
