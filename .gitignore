@@ -47,3 +47,6 @@ htmlcov/
 *.sqlite3
 app/staticfiles/
 app/media/
+
+# Consignes privées pour Claude (non publiées)
+CLAUDE.md
