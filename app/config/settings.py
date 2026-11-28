@@ -3,7 +3,7 @@
 Tous les réglages qui changent d'un poste à l'autre (clé secrète, mode debug, hôtes autorisés,
 base de données) sont lus dans les variables d'environnement : aucun secret dans le dépôt.
 En local, ces variables viennent du fichier `.env` à la racine du dépôt (modèle : `.env.example`).
-Dans Docker, elles seront fournies par Docker Compose (étape 3).
+Dans Docker, elles sont fournies par Docker Compose.
 """
 
 import os
@@ -46,6 +46,8 @@ if not SECRET_KEY:
 DEBUG = env_bool("DJANGO_DEBUG")
 
 ALLOWED_HOSTS = env_liste("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+# Caddy termine la connexion HTTPS avant de transmettre la requête à Django.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # --- Applications -----------------------------------------------------------
@@ -94,12 +96,23 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 # --- Base de données --------------------------------------------------------
-# SQLite pour commencer sans Docker. PostgreSQL + PostGIS arrive à l'étape 3 (Docker).
+# Le nom « db » est celui du service PostgreSQL dans Compose.
+
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+if not POSTGRES_PASSWORD:
+    raise ImproperlyConfigured("La variable POSTGRES_PASSWORD est absente : la remplir dans .env.")
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "cocagne"),
+        "USER": os.environ.get("POSTGRES_USER", "cocagne"),
+        "PASSWORD": POSTGRES_PASSWORD,
+        "HOST": os.environ.get("POSTGRES_HOST", "db"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        # En dehors du développement, on réutilise les connexions pendant une minute.
+        "CONN_MAX_AGE": 0 if DEBUG else 60,
+        "CONN_HEALTH_CHECKS": True,
     }
 }
 
