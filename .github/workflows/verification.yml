@@ -1,0 +1,84 @@
+name: Vérifications du projet
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Un nouveau commit remplace la vérification précédente de la même PR.
+concurrency:
+  group: verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verification:
+    name: Django, Ruff et Docker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Préparer les variables de test
+        # Ces valeurs sont générées pour ce lancement et restent sur le runner.
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from secrets import token_urlsafe
+
+          contenu = Path(".env.example").read_text(encoding="utf-8")
+          for variable in ("DJANGO_SECRET_KEY", "POSTGRES_PASSWORD", "DJANGO_SUPERUSER_PASSWORD"):
+              contenu = contenu.replace(f"{variable}=\n", f"{variable}={token_urlsafe(50)}\n")
+          Path(".env").write_text(contenu, encoding="utf-8")
+          PY
+
+      - name: Vérifier les fichiers Compose
+        run: |
+          docker compose config --quiet
+          docker compose -f compose.yaml config --quiet
+
+      - name: Démarrer les services
+        run: docker compose up --build --quiet-pull -d
+
+      - name: Attendre que le site réponde
+        run: >-
+          curl --fail --silent --show-error
+          --retry 15 --retry-delay 2 --retry-connrefused --max-time 5
+          --output /dev/null http://localhost:8000/
+
+      - name: Vérifier Django et les migrations
+        run: |
+          docker compose exec -T web python manage.py check
+          docker compose exec -T web python manage.py migrate --check
+          docker compose exec -T web python manage.py makemigrations --check --dry-run
+
+      - name: Lancer les tests sur PostgreSQL
+        run: docker compose exec -T web python manage.py test --noinput
+
+      - name: Vérifier le code Python
+        # En CI, le dossier monté peut appartenir à un autre utilisateur.
+        run: |
+          docker compose exec -T web ruff check --no-cache .
+          docker compose exec -T web ruff format --no-cache --check .
+
+      - name: Construire et vérifier l'image Gunicorn
+        run: |
+          docker compose -f compose.yaml build web
+          docker compose -f compose.yaml run --rm --no-deps web gunicorn --check-config config.wsgi:application
+
+      - name: Afficher les logs en cas d'échec
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail 100
+
+      - name: Nettoyer les services de test
+        if: always()
+        run: docker compose down --volumes --remove-orphans

@@ -15,7 +15,7 @@ Projet de SAÉ 5 du BUT Informatique (3e année), IUT de Saint-Dié-des-Vosges -
 | 1 - Analyse comparative | [Rapport en anglais](rendus/rendu1-analyse-comparative/SAE5_Benchmark_Report_Belcour_Kaba.pdf) | Rapport rendu le 22/09/2026 ; oral le 19/10/2026 |
 | 3 - Proposition technique | [Diaporama](rendus/rendu3-proposition-technique/Belcour_Kaba_Rendu3_PropositionTechnique.pdf) | Rendu le 15/10/2026 |
 | 4 - Proposition financière | [Devis](rendus/rendu4-proposition-financiere/Belcour_Kaba_Rendu4_PropositionFinanciere.pdf) | Rendu le 30/10/2026 |
-| 7 - Environnement de développement | Ce dépôt (branches, Docker, CI/CD à venir) et un document d'explication (à venir) | En cours, à rendre vers le 25/01/2027 |
+| 7 - Environnement de développement | Ce dépôt (branches, Docker, CI) et un document d'explication (à venir) | En cours, à rendre vers le 25/01/2027 |
 
 ## Organisation du dépôt
 
@@ -26,7 +26,7 @@ Projet de SAÉ 5 du BUT Informatique (3e année), IUT de Saint-Dié-des-Vosges -
 ├── compose.yaml         services communs : Django, PostgreSQL/PostGIS et Caddy
 ├── compose.override.yaml réglages de développement, chargés automatiquement
 ├── .env.example         variables à copier dans .env
-├── .github/             modèle de pull request (GitHub Actions à venir)
+├── .github/             modèle de pull request et vérifications GitHub Actions
 ├── rendus/              documents rendus (PDF), un dossier par rendu
 ├── CONTRIBUTING.md      nos règles de travail : branches, commits, pull requests
 └── README.md
@@ -117,6 +117,24 @@ docker compose down
 ```
 
 Si le port 8000 est déjà utilisé, modifier `HTTP_PORT` dans `.env`, puis relancer `docker compose up -d`. Si le site ne répond pas, regarder `docker compose logs dependances web db`.
+
+## Vérifications automatiques sur GitHub
+
+Le workflow `.github/workflows/verification.yml` s'exécute sur les pull requests vers `main`, puis après chaque push sur `main`. Les résultats sont visibles dans l'onglet **Actions** du dépôt et dans les vérifications de la pull request.
+
+La CI utilise les mêmes services Docker qu'en local. Elle génère un fichier `.env` temporaire avec des valeurs aléatoires : aucun secret du poste ou de production n'est nécessaire.
+
+À chaque lancement, elle vérifie :
+
+- les deux configurations Compose et le démarrage du site via Caddy ;
+- la configuration Django, les migrations appliquées et les migrations oubliées ;
+- les tests Django sur PostgreSQL ;
+- les erreurs Python et la mise en forme avec Ruff ;
+- la construction de l'image Gunicorn et le chargement de sa configuration.
+
+Si une étape échoue, la CI affiche les logs des services pour aider à comprendre le problème. Les conteneurs et les volumes de test sont ensuite supprimés sur le runner GitHub. Les données de développement restent sur le poste.
+
+Avant de fusionner une PR, attendre que **Django, Ruff et Docker** soit vert. Si le contrôle échoue, ouvrir son détail dans GitHub, corriger sur la même branche et pousser le nouveau commit. Une nouvelle vérification est alors lancée automatiquement.
 
 ## Configuration commune et déploiement
 
