@@ -1,0 +1,48 @@
+services:
+  # Ce service s'arrête dès que les dépendances de développement sont installées.
+  dependances:
+    image: python:3.13-slim-bookworm
+    working_dir: /app
+    command:
+      - sh
+      - -c
+      - >-
+        python -m venv /opt/venv &&
+        /opt/venv/bin/pip install --no-cache-dir -r requirements-dev.txt
+    volumes:
+      - ./app:/app:ro
+      - python_dependances:/opt/venv
+    networks:
+      - public
+
+  web:
+    build:
+      target: development
+    environment:
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:?Remplir DJANGO_SUPERUSER_PASSWORD dans .env}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
+    command:
+      - sh
+      - -c
+      - >-
+        python manage.py migrate --noinput &&
+        python manage.py collectstatic --noinput &&
+        exec python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./app:/app
+      - python_dependances:/opt/venv:ro
+    depends_on:
+      dependances:
+        condition: service_completed_successfully
+
+  proxy:
+    environment:
+      SITE_ADDRESS: ":80"
+    # En local, seul Caddy est accessible depuis le PC.
+    ports: !override
+      - "127.0.0.1:${HTTP_PORT:-8000}:80"
+
+volumes:
+  python_dependances:

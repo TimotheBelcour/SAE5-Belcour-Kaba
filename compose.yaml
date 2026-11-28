@@ -1,0 +1,78 @@
+name: belcour_kaba
+
+services:
+  db:
+    image: postgis/postgis:17-3.7
+    # L'image PostGIS est publiée pour cette architecture, y compris sur Mac avec émulation.
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cocagne}
+      POSTGRES_USER: ${POSTGRES_USER:-cocagne}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Remplir POSTGRES_PASSWORD dans .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - interne
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+      target: production
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Remplir DJANGO_SECRET_KEY dans .env}
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?Remplir DJANGO_ALLOWED_HOSTS dans .env}
+      POSTGRES_DB: ${POSTGRES_DB:-cocagne}
+      POSTGRES_USER: ${POSTGRES_USER:-cocagne}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Remplir POSTGRES_PASSWORD dans .env}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - staticfiles:/app/staticfiles
+    networks:
+      - interne
+
+  proxy:
+    image: caddy:2-alpine
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Remplir SITE_ADDRESS dans .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    configs:
+      - source: caddy
+        target: /etc/caddy/Caddyfile
+    volumes:
+      - staticfiles:/srv/static:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    networks:
+      - public
+      - interne
+
+configs:
+  caddy:
+    file: docker/caddy/Caddyfile
+
+volumes:
+  postgres_data:
+  staticfiles:
+  caddy_data:
+  caddy_config:
+
+networks:
+  public:
+  interne:
+    internal: true
